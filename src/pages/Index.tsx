@@ -1,4 +1,5 @@
-import { DictionaryDemo } from "@/components/DictionaryDemo";
+import { DictionaryDemo } from "../components/DictionaryDemo";
+import { LoadingStatesDemo } from "../components/LoadingStatesDemo";
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
         </div>
         
         <DictionaryDemo />
+        <LoadingStatesDemo />
       </div>
     </div>
   );
