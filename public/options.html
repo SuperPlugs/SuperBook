@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuperBook Settings</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    body {
+      width: 380px;
+      min-height: auto;
+      margin: 0 auto;
+      padding: 0;
+      background: transparent;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .chrome-options {
+      width: 380px;
+      margin: 0;
+      background: #202124;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="chrome-options">
+    <div class="settings-view" id="settingsView">
+      <div class="settings-header">
+        <span class="settings-title-text">SuperBook Settings</span>
+        <button class="icon-btn close-btn" id="closeBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="settings-body">
+        <div class="settings-card">
+          <span class="card-label">GENERAL</span>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Enable Extension</span>
+              <span class="setting-desc">Turn SuperBook on or off</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="enabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <span class="card-label">TOOLTIP</span>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Auto-Hide Tooltip</span>
+              <span class="setting-desc">Automatically hide the definition after a few seconds</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="autoHide">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Hide Delay (seconds)</span>
+              <span class="setting-desc">How long before the tooltip hides</span>
+            </div>
+            <input type="number" id="hideDelay" min="1" max="15" value="5">
+          </div>
+        </div>
+
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"><span class="toast-icon">&#10003;</span> Settings saved</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
