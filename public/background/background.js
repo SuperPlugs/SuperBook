@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.sync.set({
       enabled: true,
       autoHide: true,
-      hideDelay: 5000,
+      hideDelay: 5,
     });
   } else if (details.reason === "update") {
     console.log("SuperBook extension updated");
@@ -22,8 +22,8 @@ chrome.runtime.onInstalled.addListener((details) => {
 // Handle extension icon click
 chrome.action.onClicked.addListener((tab) => {
   // Toggle extension on/off for current tab
-  chrome.storage.sync.get(["enabled"], (result) => {
-    const newState = !result.enabled;
+    chrome.storage.sync.get(["enabled"], (result) => {
+      const newState = !(result && result.enabled);
     chrome.storage.sync.set({ enabled: newState });
 
     // Update icon to reflect state
@@ -79,9 +79,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "getSettings") {
     chrome.storage.sync.get(["enabled", "autoHide", "hideDelay"], (result) => {
       sendResponse({
-        enabled: result.enabled !== false, // Default to true
-        autoHide: result.autoHide !== false, // Default to true
-        hideDelay: result.hideDelay || 5000, // Default to 5 seconds
+        enabled: result ? result.enabled !== false : true,
+        autoHide: result ? result.autoHide !== false : true,
+        hideDelay: result && result.hideDelay ? result.hideDelay : 5,
       });
     });
     return true; // Keep message channel open for async response
@@ -90,5 +90,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Initialize icon state on startup
 chrome.storage.sync.get(["enabled"], (result) => {
-  updateIcon(result.enabled !== false);
+  updateIcon(result ? result.enabled !== false : true);
 });
