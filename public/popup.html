@@ -1,63 +1,173 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dictionary Terminal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap"
-      rel="stylesheet" />
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <div class="terminal-container">
-      <div class="terminal-header">
-        <div class="terminal-dots">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot yellow"></div>
-          <div class="terminal-dot green"></div>
-        </div>
-        <div class="terminal-title">Dictionary Terminal v1.0</div>
-        <button class="clear-btn" onclick="showHistory()">history</button>
-        <button class="clear-btn" onclick="clearOutput()">clear</button>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extensions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup" id="popupContainer">
+    <!-- VIEW 1: EXTENSIONS LIST -->
+    <div class="view active" id="listView">
+      <div class="popup-header">
+        <span class="popup-title">Extensions</span>
+        <button class="icon-only-btn close-btn" id="closeBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
-      <div class="terminal-body">
-        <div class="input-section">
-          <span class="prompt">dict@lookup:~$</span>
-          <div class="input-container">
-            <input
-              type="text"
-              class="word-input"
-              id="wordInput"
-              placeholder="enter word to lookup..."
-              autocomplete="off"
-              spellcheck="false" />
-            <span class="cursor" id="cursor"></span>
+      <div class="popup-body">
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">Access requested</span>
+          </div>
+          <p class="section-desc">To give an extension access to this site, click it.</p>
+
+          <div class="ext-list">
+            <div class="ext-row clickable-row" id="superbookRow">
+              <div class="ext-info">
+                <div class="ext-logo sb-logo-container">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" class="sb-svg-logo">
+                    <path d="M12 21C9 21 4 19.5 4 16.5V5C4 7 9 8.5 12 8.5" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 21C15 21 20 19.5 20 16.5V5C20 7 15 8.5 12 8.5" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="8.5" x2="12" y2="21" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <span class="ext-name">SuperBook</span>
+              </div>
+              <div class="ext-actions">
+                <button class="icon-only-btn action-pin-btn" title="Pin extension" aria-label="Pin">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v8M5 10h14M19 10l-2 3v5H7v-5l-2-3M12 18v4"></path>
+                  </svg>
+                </button>
+                <button class="icon-only-btn action-menu-btn" id="superbookMenuBtn" title="More actions" aria-label="More">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <circle cx="12" cy="5" r="2"></circle>
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <circle cx="12" cy="19" r="2"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="output-section" id="output">
-          <div class="output-line">
-            <span style="color: #4ade80">Welcome to Dictionary Terminal!</span>
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">No access needed</span>
           </div>
-          <div class="output-line" style="color: #666">
-            Type any word and press Enter to get definitions, pronunciations,
-            and synonyms.
+          <p class="section-desc">These extensions don't need to see and change information on this site.</p>
+
+          <div class="ext-list">
+            <div class="ext-row clickable-row" id="volumeBoosterRow">
+              <div class="ext-info">
+                <div class="ext-logo vb-logo-container">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" class="vb-svg-logo">
+                    <path d="M12 8L7.5 12H4c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h3.5L12 20V8zm4 4c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM13.5 4.07v2.02c2.62.81 4.5 3.24 4.5 6.11s-1.88 5.3-4.5 6.11v2.02c3.74-.88 6.5-4.22 6.5-8.13s-2.76-7.25-6.5-8.13z"/>
+                  </svg>
+                </div>
+                <span class="ext-name">Volume Booster</span>
+              </div>
+              <div class="ext-actions">
+                <button class="icon-only-btn action-pin-btn" title="Pin extension" aria-label="Pin">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v8M5 10h14M19 10l-2 3v5H7v-5l-2-3M12 18v4"></path>
+                  </svg>
+                </button>
+                <button class="icon-only-btn action-menu-btn" title="More actions" aria-label="More">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <circle cx="12" cy="5" r="2"></circle>
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <circle cx="12" cy="19" r="2"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="output-line" style="color: #666">&nbsp;</div>
         </div>
+      </div>
 
-        <div class="help-text">
-          Press Enter to search • ↑/↓ for history • ESC to clear input
-        </div>
-
-        <div class="status-indicator" id="statusIndicator">● online</div>
+      <div class="popup-footer">
+        <button class="footer-btn" id="manageBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="gear-icon">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0a2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Manage extensions</span>
+        </button>
       </div>
     </div>
 
-    <script src="popupp1.js"></script>
-  </body>
+    <!-- VIEW 2: SUPERBOOK SETTINGS (Chromium-style) -->
+    <div class="view" id="settingsView">
+      <div class="settings-header">
+        <button class="icon-btn back-btn" id="backBtn" aria-label="Go Back">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <span class="settings-title-text">SuperBook Settings</span>
+        <button class="icon-btn close-btn" id="settingsCloseBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="settings-body">
+        <div class="settings-card">
+          <span class="card-label">GENERAL</span>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Enable Extension</span>
+              <span class="setting-desc">Turn SuperBook on or off</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="enabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <span class="card-label">TOOLTIP</span>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Auto-Hide Tooltip</span>
+              <span class="setting-desc">Automatically hide the definition after a few seconds</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="autoHide">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Hide Delay (seconds)</span>
+              <span class="setting-desc">How long before the tooltip hides</span>
+            </div>
+            <input type="number" id="hideDelay" min="1" max="15" value="5">
+          </div>
+        </div>
+
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><span class="toast-icon">&#10003;</span> Settings saved</div>
+
+  <script src="popup.js"></script>
+</body>
 </html>
