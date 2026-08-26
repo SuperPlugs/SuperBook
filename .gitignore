@@ -1,3 +1,7 @@
+# Extension folder
+public/*
+public
+
 # Logs
 logs
 *.log

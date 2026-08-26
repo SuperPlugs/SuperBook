@@ -194,11 +194,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message && message.action === "getDictionaryMeaning") {
-    const word = typeof message.word === "string" ? message.word.trim().toLowerCase() : "";
-    if (!/^[\p{L}][\p{L}'-]{1,63}$/u.test(word)) return sendResponse({ ok: false, error: "invalid-word" });
+    const word =
+      typeof message.word === "string" ? message.word.trim().toLowerCase() : "";
+    if (!/^[\p{L}][\p{L}'-]{1,63}$/u.test(word))
+      return sendResponse({ ok: false, error: "invalid-word" });
     const lookup = async (url, parse) => {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 7000);
+      const timeout = setTimeout(() => controller.abort(), 5000);
       try {
         const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) return null;
@@ -212,18 +214,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const primary = await lookup(
         `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`,
-        (data) => Array.isArray(data) && data[0]?.meanings?.length ? data[0] : null,
+        (data) =>
+          Array.isArray(data) && data[0]?.meanings?.length ? data[0] : null,
       );
-      if (primary) return { ok: true, data: primary, provider: "Free Dictionary" };
+      if (primary)
+        return { ok: true, data: primary, provider: "Free Dictionary" };
       const fallback = await lookup(
         `https://api.datamuse.com/words?sp=${encodeURIComponent(word)}&md=d&max=1`,
-        (data) => data?.[0]?.defs?.[0] ? {
-          word,
-          meanings: [{ partOfSpeech: data[0].defs[0].slice(0, 1), definitions: [{ definition: data[0].defs[0].slice(2) }] }],
-        } : null,
+        (data) =>
+          data?.[0]?.defs?.[0]
+            ? {
+                word,
+                meanings: [
+                  {
+                    partOfSpeech: data[0].defs[0].slice(0, 1),
+                    definitions: [{ definition: data[0].defs[0].slice(2) }],
+                  },
+                ],
+              }
+            : null,
       );
-      if (fallback) return { ok: true, data: fallback, provider: "Datamuse fallback" };
-      return { ok: false, error: "Dictionary service unavailable. Please try again." };
+      if (fallback)
+        return { ok: true, data: fallback, provider: "Datamuse fallback" };
+      return {
+        ok: false,
+        error: "Dictionary service unavailable. Please try again.",
+      };
     })().then(sendResponse);
     return true;
   }
