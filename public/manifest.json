@@ -23,7 +23,7 @@
   "action": {
     "default_popup": "popup.html"
   },
-  "host_permissions": ["https://api.dictionaryapi.dev/*", "https://generativelanguage.googleapis.com/*"],
+  "host_permissions": ["https://api.dictionaryapi.dev/*", "https://api.datamuse.com/*", "https://generativelanguage.googleapis.com/*"],
   "web_accessible_resources": [{
     "resources": ["icons/*.png"],
     "matches": ["<all_urls>"]
