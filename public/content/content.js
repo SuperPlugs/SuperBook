@@ -52,6 +52,7 @@ function initializeSuperBook() {
           removeTooltip();
         }
       }
+      if (message && message.action === "aiModeChanged") aiMode = !!message.enabled;
     });
   } catch (_) {}
 }
@@ -190,6 +191,7 @@ function hideHoverButton() {
 }
 
 function removeTooltip() {
+  meaningRequestId++;
   if (tooltipEl && tooltipEl.parentNode) {
     tooltipEl.parentNode.removeChild(tooltipEl);
   }
@@ -198,7 +200,7 @@ function removeTooltip() {
 
 async function showTooltip(word, position) {
   removeTooltip();
-  const currentRequestId = ++meaningRequestId;
+  const currentRequestId = meaningRequestId;
 
   tooltipEl = document.createElement("div");
   tooltipEl.className = "superbook-tooltip";
@@ -233,7 +235,6 @@ async function showTooltip(word, position) {
         label.textContent = "AI Context";
         content.replaceChildren(label, document.createTextNode(result.text));
       }
-      if (message && message.action === "aiModeChanged") aiMode = !!message.enabled;
       tooltipEl.classList.add("show");
     });
     return;
@@ -308,6 +309,7 @@ async function showTooltip(word, position) {
         );
 
       content.innerHTML = parts.join("");
+      if (currentRequestId !== meaningRequestId || !tooltipEl || !tooltipEl.isConnected) return;
       tooltipEl.classList.add("show");
     } catch (err) {
       clearTimeout(timeout);
@@ -321,6 +323,7 @@ async function showTooltip(word, position) {
       else if (typeof err.message === "string") msg = err.message;
       else msg = "Something went wrong. Please try again.";
 
+      if (currentRequestId !== meaningRequestId || !tooltipEl || !tooltipEl.isConnected) return;
       content.innerHTML = `<span class="superbook-definition" style="color:#ef4444">${escapeHtml(
         msg
       )}</span>`;
@@ -350,6 +353,7 @@ async function showTooltip(word, position) {
         content.appendChild(finalMsg);
       }
 
+      if (currentRequestId !== meaningRequestId || !tooltipEl || !tooltipEl.isConnected) return;
       tooltipEl.classList.add("show");
     }
   };
