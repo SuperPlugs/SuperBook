@@ -37,6 +37,15 @@ SuperBook is an **open-source Chrome extension** that enhances your reading expe
 - 🌐 **Universal Compatibility:** Works seamlessly across all websites
 - ⌨️ **Keyboard Navigation:** Use ↑/↓ arrows to browse word history
 - 📚 **Word History:** Automatically saves and displays recent lookups
+- 🤖 **AI Context Mode:** Optional BYOK Gemini explanations for the selected word's local sentence context
+
+### AI Mode and privacy
+
+Dictionary Mode continues to use the Free Dictionary API. AI Mode is opt-in and sends only the selected word plus up to 2,000 characters of nearby sentence/paragraph context directly to Google's Gemini API over HTTPS. It does not intentionally send entire pages, browsing history, cookies, or unrelated metadata.
+
+SuperBook uses a bring-your-own-key model: you enter your own Gemini API key when enabling AI Mode. The key is stored in `chrome.storage.local`, is never logged or sent anywhere except the fixed Gemini endpoint, and is removed by the Remove API key control. Local extension storage is not a server-side secret: a user or local software with access to the browser profile can inspect it. Do not commit keys to source control.
+
+The configured model is `gemini-2.5-flash-lite`, centralized in the MV3 service worker. Gemini's own processing and retention are governed by Google's current API terms; SuperBook makes no claim that third-party providers retain no data.
 
 ---
 
