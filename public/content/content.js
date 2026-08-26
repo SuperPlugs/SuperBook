@@ -243,36 +243,10 @@ async function showTooltip(word, position) {
   let retries = 0;
 
   const fetchDefinition = async () => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-
     try {
-      const res = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(
-          word.toLowerCase()
-        )}`,
-        { signal: controller.signal }
-      );
-
-      clearTimeout(timeout);
-
-      if (!res.ok) {
-        if (res.status === 404) throw new Error("Word not found");
-        throw new Error("Server returned error");
-      }
-
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Malformed response from server");
-      }
-
-      if (!Array.isArray(data) || !data[0] || !data[0].meanings) {
-        throw new Error("Invalid API response");
-      }
-
-      const entry = data[0];
+      const result = await new Promise((resolve) => chrome.runtime.sendMessage({ action: "getDictionaryMeaning", word }, resolve));
+      if (!result?.ok) throw new Error(result?.error || "Dictionary service unavailable");
+      const entry = result.data;
       const meaning = entry.meanings[0];
       const def = meaning.definitions[0];
 
@@ -312,7 +286,6 @@ async function showTooltip(word, position) {
       if (currentRequestId !== meaningRequestId || !tooltipEl || !tooltipEl.isConnected) return;
       tooltipEl.classList.add("show");
     } catch (err) {
-      clearTimeout(timeout);
 
       let msg;
       if (err.name === "AbortError")
