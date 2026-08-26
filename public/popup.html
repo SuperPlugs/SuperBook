@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dictionary Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="terminal-container">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+        </div>
+        <div class="terminal-title">Dictionary Terminal v1.0</div>
+        <button class="clear-btn" onclick="showHistory()">history</button>
+        <button class="clear-btn" onclick="clearOutput()">clear</button>
+      </div>
+
+      <div class="terminal-body">
+        <div class="input-section">
+          <span class="prompt">dict@lookup:~$</span>
+          <div class="input-container">
+            <input
+              type="text"
+              class="word-input"
+              id="wordInput"
+              placeholder="enter word to lookup..."
+              autocomplete="off"
+              spellcheck="false" />
+            <span class="cursor" id="cursor"></span>
+          </div>
+        </div>
+
+        <div class="output-section" id="output">
+          <div class="output-line">
+            <span style="color: #4ade80">Welcome to Dictionary Terminal!</span>
+          </div>
+          <div class="output-line" style="color: #666">
+            Type any word and press Enter to get definitions, pronunciations,
+            and synonyms.
+          </div>
+          <div class="output-line" style="color: #666">&nbsp;</div>
+        </div>
+
+        <div class="help-text">
+          Press Enter to search • ↑/↓ for history • ESC to clear input
+        </div>
+
+        <div class="status-indicator" id="statusIndicator">● online</div>
+        <div class="ai-controls" aria-label="AI contextual meaning settings">
+          <label for="aiMode">AI Mode</label>
+          <input id="aiMode" type="checkbox" role="switch" />
+          <button id="configureAi" type="button">Configure API key</button>
+          <button id="removeAiKey" type="button">Remove API key</button>
+          <div id="aiMessage" role="status" aria-live="polite"></div>
+        </div>
+        <dialog id="keyDialog">
+          <form method="dialog" id="keyForm">
+            <h2>Enable AI Mode</h2>
+            <p>AI Mode uses Gemini to explain a selected word from its surrounding context.</p>
+            <label for="geminiKey">Gemini API Key</label>
+            <input id="geminiKey" type="password" autocomplete="off" required minlength="20" maxlength="256" />
+            <div><button value="cancel" type="submit">Cancel</button><button id="saveKey" value="default" type="submit">Save &amp; Enable</button></div>
+          </form>
+        </dialog>
+      </div>
+    </div>
+
+    <script src="popupp1.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
