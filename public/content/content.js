@@ -313,7 +313,6 @@ async function showTooltip(word, position) {
       tooltipEl.classList.add("show");
     } catch (err) {
       clearTimeout(timeout);
-      console.error(err);
 
       let msg;
       if (err.name === "AbortError")
