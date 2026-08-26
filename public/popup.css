@@ -285,3 +285,14 @@ body {
 .status-disabled {
   color: #ef4444;
 }
+
+.ai-controls { color: #9ca3af; border-top: 1px solid #333; padding-top: 10px; display: grid; gap: 6px; }
+.ai-controls label { color: #e5e5e5; }
+.ai-controls button { background: #333; border: 1px solid #555; color: #e5e5e5; padding: 4px 6px; cursor: pointer; font: inherit; font-size: 11px; }
+.ai-controls button:hover { background: #444; }
+#aiMessage { min-height: 16px; color: #fbbf24; font-size: 11px; }
+dialog { background: #222; color: #e5e5e5; border: 1px solid #555; padding: 14px; max-width: 320px; }
+dialog::backdrop { background: rgba(0,0,0,.55); }
+dialog form { display: grid; gap: 8px; }
+dialog input { background: #111; color: #fff; border: 1px solid #555; padding: 6px; font: inherit; }
+dialog button { background: #333; color: #fff; border: 1px solid #555; padding: 5px 8px; margin-right: 5px; }

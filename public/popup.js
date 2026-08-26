@@ -37,4 +37,43 @@ document.addEventListener('DOMContentLoaded', () => {
   if (wordInput) {
     wordInput.focus();
   }
+
+  const aiMode = document.getElementById('aiMode');
+  const configureAi = document.getElementById('configureAi');
+  const removeAiKey = document.getElementById('removeAiKey');
+  const aiMessage = document.getElementById('aiMessage');
+  const keyDialog = document.getElementById('keyDialog');
+  const geminiKey = document.getElementById('geminiKey');
+  const refreshAi = () => chrome.runtime.sendMessage({ action: 'getSettings' }, (settings) => {
+    if (chrome.runtime.lastError || !settings) return;
+    aiMode.checked = !!settings.aiMode;
+    configureAi.textContent = settings.hasGeminiKey ? 'Update API key' : 'Configure API key';
+    removeAiKey.disabled = !settings.hasGeminiKey;
+  });
+  refreshAi();
+  configureAi.addEventListener('click', () => {
+    geminiKey.value = '';
+    keyDialog.showModal();
+  });
+  document.getElementById('keyForm').addEventListener('submit', (event) => {
+    if (event.submitter?.id !== 'saveKey') return;
+    event.preventDefault();
+    const key = geminiKey.value.trim();
+    chrome.runtime.sendMessage({ action: 'saveGeminiKey', key }, (result) => {
+      if (!result?.ok) { aiMessage.textContent = 'Invalid API key.'; return; }
+      keyDialog.close();
+      chrome.storage.sync.set({ aiMode: true });
+      aiMessage.textContent = 'AI Mode enabled.';
+      refreshAi();
+    });
+  });
+  aiMode.addEventListener('change', () => {
+    if (aiMode.checked) {
+      chrome.runtime.sendMessage({ action: 'getAiStatus' }, (status) => {
+        if (!status?.hasGeminiKey) { aiMode.checked = false; configureAi.click(); return; }
+        chrome.storage.sync.set({ aiMode: true });
+      });
+    } else chrome.storage.sync.set({ aiMode: false });
+  });
+  removeAiKey.addEventListener('click', () => chrome.runtime.sendMessage({ action: 'removeGeminiKey' }, () => { aiMode.checked = false; aiMessage.textContent = 'API key removed.'; refreshAi(); }));
 });

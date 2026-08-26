@@ -10,6 +10,8 @@ let isInteracting = false;
 let enabled = true;
 let lastSelectionRect = null;
 let isInitialized = false;
+let aiMode = false;
+let meaningRequestId = 0;
 
 const FETCH_TIMEOUT = 5000;
 const MAX_RETRIES = 2;
@@ -36,6 +38,7 @@ function initializeSuperBook() {
     chrome.runtime.sendMessage({ action: "getSettings" }, (res) => {
       if (res && typeof res.enabled !== "undefined") {
         enabled = !!res.enabled;
+        aiMode = !!res.aiMode;
       }
     });
   } catch (_) {}
@@ -195,6 +198,7 @@ function removeTooltip() {
 
 async function showTooltip(word, position) {
   removeTooltip();
+  const currentRequestId = ++meaningRequestId;
 
   tooltipEl = document.createElement("div");
   tooltipEl.className = "superbook-tooltip";
@@ -211,6 +215,29 @@ async function showTooltip(word, position) {
   )}"</span>`;
   tooltipEl.appendChild(content);
   document.documentElement.appendChild(tooltipEl);
+
+  if (aiMode) {
+    content.textContent = "Understanding context...";
+    content.className = "superbook-definition superbook-loading";
+    const context = extractContext(word);
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    chrome.runtime.sendMessage({ action: "getContextualMeaning", requestId, word, context }, (result) => {
+      if (currentRequestId !== meaningRequestId || !tooltipEl || tooltipEl.querySelector(".superbook-definition") !== content) return;
+      content.className = "superbook-definition";
+      if (chrome.runtime.lastError || !result?.ok) {
+        content.textContent = aiError(result?.error);
+        if (result?.error === "missing-key") aiMode = false;
+      } else {
+        const label = document.createElement("div");
+        label.className = "superbook-word";
+        label.textContent = "AI Context";
+        content.replaceChildren(label, document.createTextNode(result.text));
+      }
+      if (message && message.action === "aiModeChanged") aiMode = !!message.enabled;
+      tooltipEl.classList.add("show");
+    });
+    return;
+  }
 
   let retries = 0;
 
@@ -341,6 +368,24 @@ async function showTooltip(word, position) {
     document.removeEventListener("click", onDocClick, true);
   };
   document.addEventListener("click", onDocClick, true);
+}
+
+function extractContext(word) {
+  const selection = window.getSelection();
+  const node = selection?.anchorNode?.parentElement;
+  const container = node?.closest("p, li, blockquote, article, section") || node;
+  const text = (container?.textContent || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const sentence = text.split(/(?<=[.!?])\s+/).find((part) => new RegExp(`\\b${escaped}\\b`, "i").test(part));
+  return (sentence || text).slice(0, 2000);
+}
+
+function aiError(code) {
+  if (code === "missing-key") return "AI Mode requires a Gemini API key. Configure it in the SuperBook popup.";
+  if (code === "invalid-key") return "The Gemini API key appears to be invalid. Update it in the SuperBook popup.";
+  if (code === "rate-limit") return "AI requests are temporarily rate-limited. Please try again later.";
+  return "Unable to generate contextual meaning right now. Use Dictionary Mode or try again.";
 }
 
 function escapeHtml(str) {
