@@ -200,7 +200,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return sendResponse({ ok: false, error: "invalid-word" });
     const lookup = async (url, parse) => {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
+      const timeout = setTimeout(() => controller.abort(), 2000);
       try {
         const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) return null;
