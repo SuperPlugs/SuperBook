@@ -1,23 +1,25 @@
+import { BookOpen, Library, Search, Settings2, Sparkles } from "lucide-react";
 import { DictionaryDemo } from "@/components/DictionaryDemo";
 
-const Index = () => {
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-            📚 SuperBook Extension
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            A Chrome extension that provides instant word definitions when you select text on any webpage.
-            Try the demo below to see how it works!
-          </p>
-        </div>
-        
-        <DictionaryDemo />
-      </div>
-    </div>
-  );
-};
+const Index = () => (
+  <main className="app-shell">
+    <aside className="app-rail" aria-label="Primary navigation">
+      <div className="brand-mark" aria-label="SuperBook"><BookOpen size={21} strokeWidth={1.8} /></div>
+      <nav className="rail-nav">
+        <button className="rail-button active" aria-label="Reader" title="Reader"><Library size={19} /></button>
+        <button className="rail-button" aria-label="Search" title="Search"><Search size={19} /></button>
+        <button className="rail-button" aria-label="Discover" title="Discover"><Sparkles size={19} /></button>
+      </nav>
+      <button className="rail-button rail-settings" aria-label="Settings" title="Settings"><Settings2 size={19} /></button>
+    </aside>
+    <section className="workspace">
+      <header className="topbar">
+        <div><p className="eyebrow">SuperBook Reader</p><h1>The art of finding the right word</h1></div>
+        <div className="reading-status"><span />Reading mode</div>
+      </header>
+      <DictionaryDemo />
+    </section>
+  </main>
+);
 
 export default Index;

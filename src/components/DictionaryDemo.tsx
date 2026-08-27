@@ -1,139 +1,49 @@
 import { useState } from "react";
+import { BookMarked, Clock3, Languages } from "lucide-react";
 import { DictionaryTooltip } from "./DictionaryTooltip";
+
+const selectableWords = new Set(["serendipity", "ephemeral", "eloquent", "mellifluous", "perseverance"]);
+
+const renderParagraph = (text: string, onSelect: (word: string, event: React.MouseEvent) => void) =>
+  text.split(/(\s+)/).map((token, index) => {
+    const word = token.replace(/[^a-zA-Z]/g, "").toLowerCase();
+    if (!selectableWords.has(word)) return token;
+    return <button type="button" className="superbook-highlight" key={`${word}-${index}`} onClick={(event) => onSelect(word, event)}>{token}</button>;
+  });
 
 export const DictionaryDemo = () => {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{
-    x: number;
-    y: number;
-  }>({ x: 0, y: 0 });
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   const handleWordClick = (word: string, event: React.MouseEvent) => {
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    setTooltipPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10,
-    });
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTooltipPosition({ x: rect.left + rect.width / 2, y: rect.bottom + 12 });
     setSelectedWord(word);
   };
 
-  const closeTooltip = () => {
-    setSelectedWord(null);
-  };
-
-  const demoText = `The dictionary extension provides instant word definitions when you select text on any webpage. Simply click on any highlighted word below to see how it works:`;
-
-  const highlightWords = [
-    "dictionary",
-    "extension",
-    "instant",
-    "definitions",
-    "webpage",
-    "highlighted",
-  ];
-
   return (
-    <div className='max-w-4xl mx-auto'>
-      <div className='bg-card rounded-lg p-8 shadow-card border'>
-        <h2 className='text-2xl font-semibold mb-6 text-center'>
-          Try the Dictionary Demo
-        </h2>
-
-        <div className='prose prose-lg max-w-none'>
-          <p className='text-lg leading-relaxed mb-8'>
-            {demoText.split(" ").map((word, index) => {
-              const cleanWord = word.replace(/[.,;:!?]/g, "");
-              const punctuation = word.replace(/[^.,;:!?]/g, "");
-
-              if (highlightWords.includes(cleanWord.toLowerCase())) {
-                return (
-                  <span key={index}>
-                    <span
-                      className='superbook-highlight px-1 py-0.5 cursor-pointer hover:bg-highlight/20 transition-colors rounded'
-                      onClick={(e) => handleWordClick(cleanWord, e)}>
-                      {cleanWord}
-                    </span>
-                    {punctuation}{" "}
-                  </span>
-                );
-              }
-              return word + " ";
-            })}
-          </p>
-
-          <div className='bg-muted rounded-lg p-6 mt-8'>
-            <h3 className='text-lg font-semibold mb-4 flex items-center gap-2'>
-              <span>📚</span> Sample Text for Testing
-            </h3>
-            <p className='text-base leading-relaxed'>
-              {[
-                "magnificent",
-                "serendipity",
-                "ubiquitous",
-                "ephemeral",
-                "eloquent",
-                "perseverance",
-                "pristine",
-                "mellifluous",
-                "enigmatic",
-                "sophisticated",
-              ].map((word, index) => (
-                <span key={index}>
-                  <span
-                    className='superbook-highlight px-1 py-0.5 cursor-pointer hover:bg-highlight/20 transition-colors rounded font-medium'
-                    onClick={(e) => handleWordClick(word, e)}>
-                    {word}
-                  </span>
-                  {index < 9 ? ", " : "."}
-                </span>
-              ))}
-            </p>
-            <p className='text-sm text-muted-foreground mt-3'>
-              Click on any word above to see its definition in a tooltip.
-            </p>
-          </div>
+    <div className="reader-layout">
+      <article className="reading-surface">
+        <div className="article-meta"><span>Essay · Language</span><span><Clock3 size={13} /> 4 min read</span></div>
+        <div className="cover-image" role="img" aria-label="Open book in soft window light">
+          <div className="cover-caption">Words shape the way we notice the world.</div>
         </div>
-
-        <div className='mt-8 grid grid-cols-1 md:grid-cols-3 gap-6'>
-          <div className='text-center p-4'>
-            <div className='w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3'>
-              <span className='text-primary-foreground text-xl'>⚡</span>
-            </div>
-            <h3 className='font-semibold mb-2'>Instant Definitions</h3>
-            <p className='text-sm text-muted-foreground'>
-              Get word definitions instantly without leaving the page
-            </p>
-          </div>
-
-          <div className='text-center p-4'>
-            <div className='w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3'>
-              <span className='text-primary-foreground text-xl'>🎯</span>
-            </div>
-            <h3 className='font-semibold mb-2'>Smart Selection</h3>
-            <p className='text-sm text-muted-foreground'>
-              Works with text selection and double-click interactions
-            </p>
-          </div>
-
-          <div className='text-center p-4'>
-            <div className='w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3'>
-              <span className='text-primary-foreground text-xl'>🌐</span>
-            </div>
-            <h3 className='font-semibold mb-2'>Universal</h3>
-            <p className='text-sm text-muted-foreground'>
-              Works on any website with the browser extension
-            </p>
-          </div>
+        <div className="article-copy">
+          <p className="drop-cap">{renderParagraph("Serendipity is more than luck. It is the quiet art of noticing something valuable while looking for something else.", handleWordClick)}</p>
+          <p>{renderParagraph("A word can hold an ephemeral feeling still long enough for us to understand it. The most eloquent language rarely announces itself; it simply makes a thought feel inevitable.", handleWordClick)}</p>
+          <blockquote>“Language is the archive of history.”<cite>Ralph Waldo Emerson</cite></blockquote>
+          <p>{renderParagraph("Some words are mellifluous, pleasing before their meaning is even known. Others reward perseverance, revealing their character only after we live with them for a while.", handleWordClick)}</p>
         </div>
-      </div>
-
-      {selectedWord && (
-        <DictionaryTooltip
-          word={selectedWord}
-          position={tooltipPosition}
-          onClose={closeTooltip}
-        />
-      )}
+      </article>
+      <aside className="reader-sidebar">
+        <div className="side-heading"><div className="side-icon"><BookMarked size={18} /></div><div><p className="eyebrow">Dictionary</p><h2>Explore as you read</h2></div></div>
+        <p className="side-copy">Select a highlighted word in the essay to reveal its meaning without leaving the page.</p>
+        <div className="word-list">
+          {[...selectableWords].map((word) => <button key={word} onClick={(event) => handleWordClick(word, event)}><span>{word}</span><Languages size={15} /></button>)}
+        </div>
+      </aside>
+      {selectedWord && <DictionaryTooltip word={selectedWord} position={tooltipPosition} onClose={() => setSelectedWord(null)} />}
     </div>
   );
 };

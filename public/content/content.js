@@ -12,8 +12,8 @@ let lastSelectionRect = null;
 let isInitialized = false;
 let aiMode = false;
 let meaningRequestId = 0;
+let tooltipOutsideHandler = null;
 
-const FETCH_TIMEOUT = 5000;
 const MAX_RETRIES = 2;
 
 function initializeSuperBook() {
@@ -192,6 +192,10 @@ function hideHoverButton() {
 
 function removeTooltip() {
   meaningRequestId++;
+  if (tooltipOutsideHandler) {
+    document.removeEventListener("click", tooltipOutsideHandler, true);
+    tooltipOutsideHandler = null;
+  }
   if (tooltipEl && tooltipEl.parentNode) {
     tooltipEl.parentNode.removeChild(tooltipEl);
   }
@@ -204,19 +208,41 @@ async function showTooltip(word, position) {
 
   tooltipEl = document.createElement("div");
   tooltipEl.className = "superbook-tooltip";
-  tooltipEl.style.left = `${Math.min(
-    position.x + 8,
-    window.scrollX + document.documentElement.clientWidth - 320
+  const viewportWidth = document.documentElement.clientWidth;
+  const tooltipWidth = Math.min(340, viewportWidth - 24);
+  tooltipEl.style.left = `${Math.max(
+    window.scrollX + 12,
+    Math.min(position.x + 8, window.scrollX + viewportWidth - tooltipWidth - 12)
   )}px`;
-  tooltipEl.style.top = `${Math.max(position.y - 8, window.scrollY + 8)}px`;
+  const viewportTop = window.scrollY + 12;
+  const viewportBottom = window.scrollY + window.innerHeight - 12;
+  const tooltipTop = position.y + 260 > viewportBottom ? position.y - 268 : position.y + 8;
+  tooltipEl.style.top = `${Math.max(tooltipTop, viewportTop)}px`;
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "superbook-tooltip-close";
+  closeButton.setAttribute("aria-label", "Close definition");
+  closeButton.textContent = "×";
+  closeButton.addEventListener("click", removeTooltip);
+  tooltipEl.appendChild(closeButton);
 
   const content = document.createElement("div");
   content.className = "superbook-definition";
-  content.innerHTML = `<span class="superbook-loading">Looking up "${escapeHtml(
-    word
-  )}"</span>`;
+  const loading = document.createElement("span");
+  loading.className = "superbook-loading";
+  loading.textContent = `Looking up "${word}"`;
+  content.appendChild(loading);
   tooltipEl.appendChild(content);
   document.documentElement.appendChild(tooltipEl);
+  tooltipEl.classList.add("show");
+
+  tooltipOutsideHandler = (ev) => {
+    const target = ev.target;
+    if (tooltipEl?.contains(target) || hoverButtonEl?.contains(target)) return;
+    removeTooltip();
+  };
+  document.addEventListener("click", tooltipOutsideHandler, true);
 
   if (aiMode) {
     content.textContent = "Understanding context...";
@@ -332,18 +358,6 @@ async function showTooltip(word, position) {
 
   await fetchDefinition();
 
-  const onDocClick = (ev) => {
-    const target = ev.target;
-    if (!tooltipEl) return;
-    if (
-      tooltipEl.contains(target) ||
-      (hoverButtonEl && hoverButtonEl.contains(target))
-    )
-      return;
-    removeTooltip();
-    document.removeEventListener("click", onDocClick, true);
-  };
-  document.addEventListener("click", onDocClick, true);
 }
 
 function extractContext(word) {

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BookOpen, RotateCcw, X } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface Definition {
@@ -19,21 +20,20 @@ export const DictionaryTooltip = ({ word, position, onClose }: DictionaryTooltip
   const [definition, setDefinition] = useState<Definition | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestId = useRef(0);
 
-  const fetchDefinition = async () => {
+  const fetchDefinition = useCallback(async () => {
+    const currentRequest = ++requestId.current;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     try {
       setLoading(true);
       setError(null);
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000); // timeout after 5s
 
       const response = await fetch(
         `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`,
         { signal: controller.signal }
       );
-
-      clearTimeout(timeout);
 
       if (!response.ok) {
         throw new Error("Word not found");
@@ -44,6 +44,7 @@ export const DictionaryTooltip = ({ word, position, onClose }: DictionaryTooltip
       const meaning = entry.meanings?.[0];
       const def = meaning?.definitions?.[0];
 
+      if (requestId.current !== currentRequest) return;
       setDefinition({
         word: entry.word,
         phonetic: entry.phonetic || entry.phonetics?.[0]?.text || "",
@@ -51,24 +52,28 @@ export const DictionaryTooltip = ({ word, position, onClose }: DictionaryTooltip
         definition: def?.definition || "No definition available",
         example: def?.example || undefined,
       });
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err: unknown) {
+      if (requestId.current !== currentRequest) return;
+      if (err instanceof DOMException && err.name === "AbortError") {
         setError("Request timed out. Please try again.");
       } else if (err instanceof TypeError) {
         setError("Network error. Please check your connection.");
-      } else if (typeof err.message === "string") {
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("Something went wrong. Please try again.");
       }
     } finally {
-      setLoading(false);
+      clearTimeout(timeout);
+      if (requestId.current === currentRequest) setLoading(false);
     }
-  };
+  }, [word]);
 
   useEffect(() => {
     fetchDefinition();
-  }, [word]);
+    const requestCounter = requestId;
+    return () => { requestCounter.current++; };
+  }, [fetchDefinition]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -87,70 +92,69 @@ export const DictionaryTooltip = ({ word, position, onClose }: DictionaryTooltip
     document.addEventListener("click", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
 
-    const timer = setTimeout(onClose, 5000);
-
     return () => {
       document.removeEventListener("click", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
-      clearTimeout(timer);
     };
   }, [onClose]);
 
   return (
     <div
       className={cn(
-        "dictionary-tooltip fixed z-50 max-w-80 min-w-50 p-3 rounded-xl",
-        "bg-tooltip text-tooltip-foreground border border-tooltip-border",
-        "shadow-tooltip animate-in fade-in-0 zoom-in-95 duration-200"
+        "dictionary-tooltip fixed z-50 w-[min(360px,calc(100vw-24px))] p-4 rounded-2xl",
+        "text-tooltip-foreground border",
+        "animate-in fade-in-0 zoom-in-95 duration-200"
       )}
       style={{
-        left: `${Math.min(position.x, window.innerWidth - 320)}px`,
-        top: `${Math.max(position.y - 10, 10)}px`,
+        left: `${Math.max(12, Math.min(position.x - 180, window.innerWidth - 372))}px`,
+        top: `${Math.max(12, Math.min(position.y, window.innerHeight - 260))}px`,
       }}
     >
+      <button className="tooltip-close" onClick={onClose} aria-label="Close definition"><X size={15} /></button>
       {loading && (
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-3 text-sm text-white/70 py-3">
           <div className="w-4 h-4 border-2 border-highlight border-t-transparent rounded-full animate-spin" />
           <span>Looking up "{word}"...</span>
         </div>
       )}
 
       {error && (
-        <div className="text-destructive text-sm space-y-2">
+        <div className="text-red-300 text-sm space-y-3">
           <div>{error}</div>
           <button
             onClick={() => fetchDefinition()}
-            className="text-sm bg-highlight text-white px-2 py-1 rounded-md"
+            className="tooltip-action"
           >
-            Retry
+            <RotateCcw size={14} /> Retry
           </button>
         </div>
       )}
 
       {definition && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-base text-highlight capitalize">
+        <div className="space-y-3">
+          <div className="tooltip-label"><BookOpen size={13} /> Definition</div>
+          <div className="flex items-end gap-2 flex-wrap pr-7">
+            <span className="font-semibold text-2xl text-white capitalize leading-none">
               {definition.word}
             </span>
             {definition.phonetic && (
-              <span className="text-xs text-highlight/80 italic">
+              <span className="text-sm text-white/45">
                 {definition.phonetic}
               </span>
             )}
             {definition.partOfSpeech && (
-              <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-md">
+              <span className="part-of-speech">
                 {definition.partOfSpeech}
               </span>
             )}
           </div>
 
-          <p className="text-sm leading-relaxed text-tooltip-foreground/90">
+          <p className="text-sm leading-relaxed text-white/80">
             {definition.definition}
           </p>
 
           {definition.example && (
-            <div className="text-xs italic text-tooltip-foreground/70 border-l-2 border-highlight pl-2 mt-2">
+            <div className="text-xs italic text-white/50 border-l border-highlight pl-3 mt-2">
               "{definition.example}"
             </div>
           )}

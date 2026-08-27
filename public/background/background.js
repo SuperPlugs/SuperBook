@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.action.onClicked.addListener((tab) => {
   // Toggle extension on/off for current tab
   chrome.storage.sync.get(["enabled"], (result) => {
-    const newState = !result.enabled;
+    const newState = !(result.enabled !== false);
     chrome.storage.sync.set({ enabled: newState });
 
     // Update icon to reflect state

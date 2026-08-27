@@ -3,12 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dictionary Terminal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap"
-      rel="stylesheet" />
+    <title>SuperBook</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
@@ -19,35 +14,37 @@
           <div class="terminal-dot yellow"></div>
           <div class="terminal-dot green"></div>
         </div>
-        <div class="terminal-title">Dictionary Terminal v1.0</div>
-        <button class="clear-btn" onclick="showHistory()">history</button>
-        <button class="clear-btn" onclick="clearOutput()">clear</button>
+        <div class="terminal-title"><strong>SuperBook</strong><span>Dictionary</span></div>
+        <div class="header-actions">
+          <button class="clear-btn" id="historyBtn" type="button">History</button>
+          <button class="clear-btn" id="clearBtn" type="button">Clear</button>
+        </div>
       </div>
 
       <div class="terminal-body">
         <div class="input-section">
-          <span class="prompt">dict@lookup:~$</span>
+          <span class="prompt" aria-hidden="true">⌕</span>
           <div class="input-container">
             <input
               type="text"
               class="word-input"
               id="wordInput"
-              placeholder="enter word to lookup..."
+              placeholder="Look up a word…"
               autocomplete="off"
               spellcheck="false" />
-            <span class="cursor" id="cursor"></span>
+            <span class="cursor" id="cursor" aria-hidden="true"></span>
           </div>
         </div>
 
         <div class="output-section" id="output">
           <div class="output-line">
-            <span style="color: #4ade80">Welcome to Dictionary Terminal!</span>
+            <span class="welcome-title">Welcome to SuperBook</span>
           </div>
-          <div class="output-line" style="color: #666">
-            Type any word and press Enter to get definitions, pronunciations,
+          <div class="output-line welcome-copy">
+            Type a word and press Enter to get its definition, pronunciation,
             and synonyms.
           </div>
-          <div class="output-line" style="color: #666">&nbsp;</div>
+          <div class="output-line">&nbsp;</div>
         </div>
 
         <div class="help-text">
@@ -56,10 +53,8 @@
 
         <div class="status-indicator" id="statusIndicator">● online</div>
         <div class="ai-controls" aria-label="AI contextual meaning settings">
-          <label for="aiMode">AI Mode</label>
-          <input id="aiMode" type="checkbox" role="switch" />
-          <button id="configureAi" type="button">Configure API key</button>
-          <button id="removeAiKey" type="button">Remove API key</button>
+          <label class="switch-row" for="aiMode"><span><strong>Context mode</strong><small>Explain words in their surrounding text</small></span><input id="aiMode" type="checkbox" role="switch" /></label>
+          <div class="ai-actions"><button id="configureAi" type="button">Configure key</button><button id="removeAiKey" type="button">Remove key</button></div>
           <div id="aiMessage" role="status" aria-live="polite"></div>
         </div>
         <dialog id="keyDialog">
@@ -75,6 +70,5 @@
     </div>
 
     <script src="popupp1.js"></script>
-    <script src="popup.js"></script>
   </body>
 </html>

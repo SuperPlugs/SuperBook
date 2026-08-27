@@ -1,281 +1,194 @@
 const wordInput = document.getElementById("wordInput");
 const output = document.getElementById("output");
-const cursor = document.getElementById("cursor");
 const statusIndicator = document.getElementById("statusIndicator");
+const historyBtn = document.getElementById("historyBtn");
+const clearBtn = document.getElementById("clearBtn");
+const aiMode = document.getElementById("aiMode");
+const configureAi = document.getElementById("configureAi");
+const removeAiKey = document.getElementById("removeAiKey");
+const aiMessage = document.getElementById("aiMessage");
+const keyDialog = document.getElementById("keyDialog");
+const keyForm = document.getElementById("keyForm");
+const geminiKey = document.getElementById("geminiKey");
+const extensionStorage = typeof chrome !== "undefined" && chrome.storage ? chrome.storage : null;
 
-// Word history management
-let wordHistory = [];
 const MAX_HISTORY_SIZE = 10;
-
-// Load word history from storage
-chrome.storage.local.get(["wordHistory"], (result) => {
-  wordHistory = result.wordHistory || [];
-});
-
-// Check extension status
-chrome.storage.sync.get(["enabled"], (result) => {
-  const enabled = result.enabled !== false;
-  statusIndicator.className = `status-indicator ${
-    enabled ? "status-enabled" : "status-disabled"
-  }`;
-  statusIndicator.textContent = `● ${enabled ? "online" : "offline"}`;
-});
-
-// Focus input on load
-wordInput.focus();
-
-// Handle cursor visibility
-wordInput.addEventListener("focus", () => {
-  cursor.style.display = "none";
-});
-
-wordInput.addEventListener("blur", () => {
-  cursor.style.display = "inline-block";
-});
-
-// Handle input events
-wordInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const word = wordInput.value.trim();
-    if (word) {
-      lookupWord(word);
-      wordInput.value = "";
-    }
-  } else if (e.key === "Escape") {
-    wordInput.value = "";
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    navigateHistory(-1);
-  } else if (e.key === "ArrowDown") {
-    e.preventDefault();
-    navigateHistory(1);
-  }
-});
-
-// History navigation
+let wordHistory = [];
 let historyIndex = -1;
-function navigateHistory(direction) {
-  if (wordHistory.length === 0) return;
 
-  historyIndex += direction;
-
-  if (historyIndex < 0) {
-    historyIndex = -1;
-    wordInput.value = "";
-  } else if (historyIndex >= wordHistory.length) {
-    historyIndex = wordHistory.length - 1;
-  } else {
-    wordInput.value = wordHistory[historyIndex];
-  }
+function line(className, text) {
+  const element = document.createElement("div");
+  element.className = `output-line${className ? ` ${className}` : ""}`;
+  element.textContent = text;
+  return element;
 }
 
-// Dictionary API lookup
-async function lookupWord(word) {
-  // Add word to history
-  addToHistory(word);
+function setStatus(enabled) {
+  statusIndicator.className = `status-indicator ${enabled ? "status-enabled" : "status-disabled"}`;
+  statusIndicator.textContent = `● ${enabled ? "online" : "offline"}`;
+}
 
-  const commandLine = document.createElement("div");
-  commandLine.className = "output-line command-line";
-  commandLine.textContent = `dict@lookup:~$ define "${word}"`;
-  output.appendChild(commandLine);
-
-  // Show loading
-  const loadingLine = document.createElement("div");
-  loadingLine.className = "output-line loading";
-  loadingLine.innerHTML =
-    '<span>Searching dictionary<span class="loading-dots"></span></span>';
-  output.appendChild(loadingLine);
-
-  try {
-    const response = await fetch(
-      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(
-        word.toLowerCase()
-      )}`
-    );
-
-    // Remove loading line
-    loadingLine.remove();
-
-    if (!response.ok) {
-      throw new Error("Word not found");
-    }
-
-    const data = await response.json();
-    displayDefinition(data[0]);
-  } catch (error) {
-    loadingLine.remove();
-    displayError(word);
-  }
-
-  // Scroll to bottom
+function scrollOutput() {
   output.scrollTop = output.scrollHeight;
 }
 
-function displayDefinition(entry) {
-  // Word title
-  const wordTitle = document.createElement("div");
-  wordTitle.className = "output-line word-title";
-  wordTitle.textContent = `📖 ${entry.word.toUpperCase()}`;
-  output.appendChild(wordTitle);
+function addToHistory(word) {
+  wordHistory = [word, ...wordHistory.filter((item) => item.toLowerCase() !== word.toLowerCase())].slice(0, MAX_HISTORY_SIZE);
+  historyIndex = -1;
+  extensionStorage?.local.set({ wordHistory });
+}
 
-  // Phonetic
-  if (entry.phonetic || (entry.phonetics && entry.phonetics[0])) {
-    const phonetic = document.createElement("div");
-    phonetic.className = "output-line phonetic";
-    phonetic.textContent = `🔊 ${
-      entry.phonetic || entry.phonetics[0].text || ""
-    }`;
-    output.appendChild(phonetic);
-  }
+function navigateHistory(direction) {
+  if (!wordHistory.length) return;
+  historyIndex = Math.max(-1, Math.min(wordHistory.length - 1, historyIndex + direction));
+  wordInput.value = historyIndex === -1 ? "" : wordHistory[historyIndex];
+  wordInput.setSelectionRange(wordInput.value.length, wordInput.value.length);
+}
 
-  // Meanings
-  entry.meanings.forEach((meaning, index) => {
-    // Part of speech
-    const pos = document.createElement("div");
-    pos.className = "output-line part-of-speech";
-    pos.textContent = `[${meaning.partOfSpeech.toUpperCase()}]`;
-    output.appendChild(pos);
+function appendDefinition(entry, container) {
+  container.append(line("word-title", entry.word || "Definition"));
+  const phonetic = entry.phonetic || entry.phonetics?.find((item) => item.text)?.text;
+  if (phonetic) container.append(line("phonetic", phonetic));
 
-    // Definitions
-    meaning.definitions.slice(0, 3).forEach((def, defIndex) => {
-      const definition = document.createElement("div");
-      definition.className = "output-line definition";
-      definition.textContent = `${defIndex + 1}. ${def.definition}`;
-      output.appendChild(definition);
-
-      // Example
-      if (def.example) {
-        const example = document.createElement("div");
-        example.className = "output-line example";
-        example.textContent = `   "${def.example}"`;
-        output.appendChild(example);
-      }
+  (entry.meanings || []).forEach((meaning) => {
+    if (meaning.partOfSpeech) container.append(line("part-of-speech", meaning.partOfSpeech));
+    (meaning.definitions || []).slice(0, 3).forEach((item, index) => {
+      container.append(line("definition", `${index + 1}. ${item.definition}`));
+      if (item.example) container.append(line("example", `“${item.example}”`));
     });
-
-    // Synonyms
-    if (meaning.synonyms && meaning.synonyms.length > 0) {
-      const synonymsLabel = document.createElement("div");
-      synonymsLabel.className = "output-line synonyms";
-      synonymsLabel.textContent = "synonyms:";
-      output.appendChild(synonymsLabel);
-
-      const synonymsList = document.createElement("div");
-      synonymsList.className = "output-line synonyms-list";
-      synonymsList.textContent = meaning.synonyms.slice(0, 5).join(", ");
-      output.appendChild(synonymsList);
-    }
-
-    // Add spacing between meanings
-    if (index < entry.meanings.length - 1) {
-      const spacer = document.createElement("div");
-      spacer.className = "output-line";
-      spacer.innerHTML = "&nbsp;";
-      output.appendChild(spacer);
+    if (meaning.synonyms?.length) {
+      container.append(line("synonyms", "Synonyms"));
+      container.append(line("synonyms-list", meaning.synonyms.slice(0, 5).join(", ")));
     }
   });
-
-  // Add final spacing
-  const spacer = document.createElement("div");
-  spacer.className = "output-line";
-  spacer.innerHTML = "&nbsp;";
-  output.appendChild(spacer);
 }
 
-function displayError(word) {
-  const errorLine = document.createElement("div");
-  errorLine.className = "output-line error";
-  errorLine.textContent = `❌ Error: No definition found for "${word}"`;
-  output.appendChild(errorLine);
+function lookupWord(word) {
+  addToHistory(word);
+  const result = document.createElement("section");
+  result.className = "lookup-result";
+  result.append(line("command-line", `Lookup · ${word}`));
+  const loading = line("loading", "Searching dictionary");
+  loading.append(Object.assign(document.createElement("span"), { className: "loading-dots" }));
+  result.append(loading);
+  output.append(result);
+  scrollOutput();
 
-  const spacer = document.createElement("div");
-  spacer.className = "output-line";
-  spacer.innerHTML = "&nbsp;";
-  output.appendChild(spacer);
-}
-
-// Add word to history
-function addToHistory(word) {
-  // Remove word if it already exists (to move it to front)
-  const index = wordHistory.indexOf(word);
-  if (index > -1) {
-    wordHistory.splice(index, 1);
-  }
-
-  // Add to beginning of array
-  wordHistory.unshift(word);
-
-  // Limit history size
-  if (wordHistory.length > MAX_HISTORY_SIZE) {
-    wordHistory = wordHistory.slice(0, MAX_HISTORY_SIZE);
-  }
-
-  // Save to storage
-  chrome.storage.local.set({ wordHistory });
-
-  // Reset history navigation index
-  historyIndex = -1;
-}
-
-// Show word history
-function showHistory() {
-  // Show loading state
-  const loadingLine = document.createElement("div");
-  loadingLine.className = "output-line loading";
-  loadingLine.innerHTML =
-    '<span>Loading history<span class="loading-dots"></span></span>';
-  output.appendChild(loadingLine);
-
-  // Simulate loading delay for better UX
-  setTimeout(() => {
-    loadingLine.remove();
-
-    if (wordHistory.length === 0) {
-      const noHistoryLine = document.createElement("div");
-      noHistoryLine.className = "output-line";
-      noHistoryLine.innerHTML =
-        '<span style="color: #9ca3af;">No words in history yet.</span>';
-      output.appendChild(noHistoryLine);
-      return;
+  chrome.runtime.sendMessage({ action: "getDictionaryMeaning", word }, (response) => {
+    loading.remove();
+    if (chrome.runtime.lastError || !response?.ok) {
+      result.append(line("error", response?.error || "Dictionary service unavailable. Please try again."));
+    } else {
+      appendDefinition(response.data, result);
     }
+    scrollOutput();
+  });
+}
 
-    const historyTitle = document.createElement("div");
-    historyTitle.className = "output-line";
-    historyTitle.innerHTML =
-      '<span style="color: #4ade80; font-weight: 600;">📚 Recent Words:</span>';
-    output.appendChild(historyTitle);
-
-    wordHistory.slice(0, 5).forEach((word, index) => {
-      const historyItem = document.createElement("div");
-      historyItem.className = "output-line";
-      historyItem.style.paddingLeft = "16px";
-      historyItem.innerHTML = `<span style="color: #60a5fa;">${
-        index + 1
-      }.</span> <span style="color: #e5e5e5; cursor: pointer;" onclick="wordInput.value='${word}'; wordInput.focus();">${word}</span>`;
-      output.appendChild(historyItem);
+function showHistory() {
+  const section = document.createElement("section");
+  section.className = "lookup-result";
+  section.append(line("part-of-speech", "Recent words"));
+  if (!wordHistory.length) section.append(line("welcome-copy", "No words in history yet."));
+  wordHistory.slice(0, 5).forEach((word) => {
+    const row = line("", "");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "history-word";
+    button.textContent = word;
+    button.addEventListener("click", () => {
+      wordInput.value = word;
+      wordInput.focus();
     });
-
-    const spacer = document.createElement("div");
-    spacer.className = "output-line";
-    spacer.innerHTML = "&nbsp;";
-    output.appendChild(spacer);
-  }, 150);
+    row.append(button);
+    section.append(row);
+  });
+  output.append(section);
+  scrollOutput();
 }
 
 function clearOutput() {
-  output.innerHTML = `
-        <div class="output-line">
-          <span style="color: #4ade80;">Terminal cleared.</span>
-        </div>
-        <div class="output-line">
-          &nbsp;
-        </div>
-      `;
+  output.replaceChildren(line("welcome-title", "Ready for another word."));
   wordInput.focus();
 }
 
-// Auto-focus when clicking anywhere in terminal
-document.addEventListener("click", (e) => {
-  if (!e.target.matches("button, a, input")) {
-    wordInput.focus();
+function refreshAiSettings() {
+  if (typeof chrome === "undefined" || !chrome.runtime) return;
+  chrome.runtime.sendMessage({ action: "getSettings" }, (settings) => {
+    if (chrome.runtime.lastError || !settings) return;
+    aiMode.checked = !!settings.aiMode;
+    configureAi.textContent = settings.hasGeminiKey ? "Update key" : "Configure key";
+    removeAiKey.disabled = !settings.hasGeminiKey;
+  });
+}
+
+wordInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    const word = wordInput.value.trim();
+    if (word) lookupWord(word);
+    wordInput.value = "";
+  } else if (event.key === "Escape") {
+    wordInput.value = "";
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    navigateHistory(1);
+  } else if (event.key === "ArrowDown") {
+    event.preventDefault();
+    navigateHistory(-1);
   }
 });
+
+historyBtn.addEventListener("click", showHistory);
+clearBtn.addEventListener("click", clearOutput);
+configureAi.addEventListener("click", () => {
+  geminiKey.value = "";
+  keyDialog.showModal();
+});
+keyForm.addEventListener("submit", (event) => {
+  if (event.submitter?.id !== "saveKey") return;
+  event.preventDefault();
+  chrome.runtime.sendMessage({ action: "saveGeminiKey", key: geminiKey.value.trim() }, (result) => {
+    if (!result?.ok) {
+      aiMessage.textContent = "Enter a valid Gemini API key.";
+      return;
+    }
+    extensionStorage?.sync.set({ aiMode: true });
+    keyDialog.close();
+    aiMessage.textContent = "Context mode enabled.";
+    refreshAiSettings();
+  });
+});
+aiMode.addEventListener("change", () => {
+  if (!aiMode.checked) {
+    extensionStorage?.sync.set({ aiMode: false });
+    return;
+  }
+  chrome.runtime.sendMessage({ action: "getAiStatus" }, (status) => {
+    if (!status?.hasGeminiKey) {
+      aiMode.checked = false;
+      keyDialog.showModal();
+    } else {
+      extensionStorage?.sync.set({ aiMode: true });
+    }
+  });
+});
+removeAiKey.addEventListener("click", () => {
+  chrome.runtime.sendMessage({ action: "removeGeminiKey" }, () => {
+    aiMessage.textContent = "API key removed.";
+    refreshAiSettings();
+  });
+});
+
+if (extensionStorage) {
+  extensionStorage.local.get(["wordHistory"], (result) => {
+    wordHistory = Array.isArray(result.wordHistory) ? result.wordHistory.slice(0, MAX_HISTORY_SIZE) : [];
+  });
+  extensionStorage.sync.get(["enabled"], (result) => setStatus(result.enabled !== false));
+  extensionStorage.onChanged.addListener((changes, namespace) => {
+    if (namespace === "sync" && changes.enabled) setStatus(changes.enabled.newValue !== false);
+    if (namespace === "sync" && changes.aiMode) aiMode.checked = changes.aiMode.newValue === true;
+  });
+}
+
+refreshAiSettings();
+wordInput.focus();
